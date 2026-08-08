@@ -45,7 +45,7 @@
   </div>
 
   <script>
-    // GANTI TEKS DI BAWAH INI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+    // GANTI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwy4eMsGyKegJH_Geq9XyP9CkKq9xYrSJ9HcTtAMzSOP5L5N35Ap6PIjKGAOYU4j_Kq7A/exec";
 
     let lastScannedText = "";
@@ -58,25 +58,25 @@
       lastScannedText = decodedText;
       
       const statusEl = document.getElementById('status');
-      statusEl.innerText = "Menyimpan ke Sheet: " + decodedText + "...";
+      statusEl.innerText = "Memeriksa data: " + decodedText + "...";
       statusEl.style.backgroundColor = "#fff3cd";
       statusEl.style.color = "#856404";
 
-      // Mengirim data ke Google Apps Script menggunakan fetch API
       fetch(SCRIPT_URL, {
         method: "POST",
-        mode: "no-cors", // Diperlukan untuk CORS bypass Google Apps Script
+        mode: "no-cors",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ text: decodedText })
       })
       .then(() => {
-        statusEl.innerText = "Berhasil disimpan: " + decodedText;
+        // Karena mode 'no-cors' tidak bisa membaca isi respon JSON secara langsung, 
+        // kita tambahkan jeda status visual agar pengguna dapat indikasi yang jelas.
+        statusEl.innerText = "Scan diproses: " + decodedText;
         statusEl.style.backgroundColor = "#d4edda";
         statusEl.style.color = "#155724";
 
-        // Jeda 3 detik sebelum siap memindai kode berikutnya
         setTimeout(() => {
           isProcessing = false;
           lastScannedText = "";
