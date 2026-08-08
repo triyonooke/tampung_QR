@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Log Scanner</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -37,12 +39,15 @@
 <body>
   <div class="container">
     <h2>QR Code Scanner Log</h2>
-    <p>Arahkan kamera ke QR Code untuk mencatat data ke Google Sheet.</p>
+    <p>Arahkan kamera ke QR Code untuk menyimpan data ke Google Sheet.</p>
     <div id="reader"></div>
     <div id="status">Status: Siap memindai...</div>
   </div>
 
   <script>
+    // GANTI TEKS DI BAWAH INI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwy4eMsGyKegJH_Geq9XyP9CkKq9xYrSJ9HcTtAMzSOP5L5N35Ap6PIjKGAOYU4j_Kq7A/exec";
+
     let lastScannedText = "";
     let isProcessing = false;
 
@@ -53,32 +58,39 @@
       lastScannedText = decodedText;
       
       const statusEl = document.getElementById('status');
-      statusEl.innerText = "Menyimpan: " + decodedText + "...";
+      statusEl.innerText = "Menyimpan ke Sheet: " + decodedText + "...";
       statusEl.style.backgroundColor = "#fff3cd";
       statusEl.style.color = "#856404";
 
-      google.script.run
-        .withSuccessHandler(function(response) {
-          statusEl.innerText = response;
-          statusEl.style.backgroundColor = "#d4edda";
-          statusEl.style.color = "#155724";
+      // Mengirim data ke Google Apps Script menggunakan fetch API
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors", // Diperlukan untuk CORS bypass Google Apps Script
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ text: decodedText })
+      })
+      .then(() => {
+        statusEl.innerText = "Berhasil disimpan: " + decodedText;
+        statusEl.style.backgroundColor = "#d4edda";
+        statusEl.style.color = "#155724";
 
-          // Jeda 3 detik sebelum memperbolehkan scan QR yang sama/baru lagi
-          setTimeout(() => {
-            isProcessing = false;
-            lastScannedText = "";
-            statusEl.innerText = "Status: Siap memindai...";
-            statusEl.style.backgroundColor = "#e3f2fd";
-            statusEl.style.color = "#0d47a1";
-          }, 3000);
-        })
-        .withFailureHandler(function(err) {
-          statusEl.innerText = "Error: " + err;
-          statusEl.style.backgroundColor = "#f8d7da";
-          statusEl.style.color = "#721c24";
+        // Jeda 3 detik sebelum siap memindai kode berikutnya
+        setTimeout(() => {
           isProcessing = false;
-        })
-        .logScannedData(decodedText);
+          lastScannedText = "";
+          statusEl.innerText = "Status: Siap memindai...";
+          statusEl.style.backgroundColor = "#e3f2fd";
+          statusEl.style.color = "#0d47a1";
+        }, 3000);
+      })
+      .catch(err => {
+        statusEl.innerText = "Gagal mengirim data: " + err;
+        statusEl.style.backgroundColor = "#f8d7da";
+        statusEl.style.color = "#721c24";
+        isProcessing = false;
+      });
     }
 
     let html5QrcodeScanner = new Html5QrcodeScanner(
